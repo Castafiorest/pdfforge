@@ -1,0 +1,22 @@
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [".venv", "tests/fixtures", "alembic"]
+
+[tool.ruff.lint]
+# Core quality rules (E/F/I/B + pyupgrade + ruff-specific).
+select = ["E", "F", "I", "B", "UP", "RUF"]
+# Intentional try/except pass in worker & cleanup loops.
+ignore = ["S110", "BLE001"]
+
+[tool.ruff.lint.per-file-ignores]
+# FastAPI requires Depends()/File()/Form() in argument defaults.
+"app/api/routes/*.py" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"

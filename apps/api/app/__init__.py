@@ -1,0 +1,1 @@
+"""PDFForge API — FastAPI application."""

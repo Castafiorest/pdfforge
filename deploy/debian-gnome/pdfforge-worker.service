@@ -1,0 +1,24 @@
+# PDFForge Worker — systemd unit (template). @REPO@/@USER@ replaced by install.sh.
+[Unit]
+Description=PDFForge worker (job processing)
+After=network.target pdfforge-api.service
+Wants=pdfforge-api.service
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+WorkingDirectory=@REPO@/apps/api
+EnvironmentFile=@ENV_FILE@
+ExecStart=@REPO@/apps/api/.venv/bin/python -m app.workers.worker
+Restart=on-failure
+RestartSec=5
+
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=@REPO@/data
+PrivateTmp=false
+
+[Install]
+WantedBy=multi-user.target

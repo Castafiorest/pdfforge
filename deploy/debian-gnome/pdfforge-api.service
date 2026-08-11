@@ -1,0 +1,24 @@
+# PDFForge API — systemd unit (template). @REPO@/@USER@ are replaced by install.sh.
+[Unit]
+Description=PDFForge API server
+After=network.target
+
+[Service]
+Type=simple
+User=@USER@
+Group=@USER@
+WorkingDirectory=@REPO@/apps/api
+EnvironmentFile=@ENV_FILE@
+ExecStart=@REPO@/apps/api/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=on-failure
+RestartSec=5
+
+# Hardening (safe for a single-user server)
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=@REPO@/data
+PrivateTmp=false
+
+[Install]
+WantedBy=multi-user.target

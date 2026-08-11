@@ -1,0 +1,10 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+SQLAlchemy>=2.0
+python-multipart>=0.0.9
+pikepdf>=9.0
+PyMuPDF>=1.24
+Pillow>=10.0
+httpx>=0.27

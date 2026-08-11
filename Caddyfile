@@ -1,0 +1,27 @@
+# PDFForge — Caddy reverse proxy
+# Serves the built web app and proxies /api to the API container.
+
+{$PUBLIC_URL:http://localhost:3000} {
+	root * /srv
+	try_files {path} /index.html
+
+	encode gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+		-Server
+	}
+
+	# API proxying
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+
+	# Static assets
+	handle {
+		file_server
+	}
+}

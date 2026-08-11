@@ -1,0 +1,21 @@
+{
+  "name": "pdfforge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Privacy-first, open-source PDF toolkit (self-hostable + SaaS-ready)",
+  "license": "AGPL-3.0-only",
+  "workspaces": [
+    "apps/web",
+    "packages/shared"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "preview": "npm run preview --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "test": "npm run test --workspace=apps/web"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
