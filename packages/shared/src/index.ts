@@ -48,6 +48,16 @@ export type JobCreateResponse = {
   status: string;
 };
 
+export type BatchJobItem = {
+  job_id: string;
+  filename: string | null;
+  original_size: number | null;
+};
+
+export type BatchCompressResponse = {
+  jobs: BatchJobItem[];
+};
+
 export const COMPRESS_PRESETS = ['lossless', 'balanced', 'maximum'] as const;
 export type CompressPreset = (typeof COMPRESS_PRESETS)[number];
 

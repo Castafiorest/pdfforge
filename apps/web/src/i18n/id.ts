@@ -114,6 +114,8 @@ export const id: TranslationKey = {
     result: 'PDF terkompresi',
     noGain: 'Kompresi tidak memperkecil dokumen ini. Berkas aslinya sudah sangat teroptimasi.',
     note: 'Kompresi berat dijalankan di server dan dihapus otomatis.',
+    files: 'berkas',
+    batchResults: 'Hasil kompresi',
   },
   merge: {
     title: 'Gabung PDF',

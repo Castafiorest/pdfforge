@@ -1,12 +1,13 @@
 import { useState } from 'react';
 
-import { createJob } from '../api/client';
+import { apiErrorMessage, createCompressBatch } from '../api/client';
 import { Dropzone } from '../components/Dropzone';
 import { JobResultCard } from '../components/JobResultCard';
-import { SpinnerIcon } from '../components/icons';
+import { SpinnerIcon, TrashIcon } from '../components/icons';
 import { ToolShell } from '../components/Layout';
 import { useI18n } from '../i18n';
-import type { CompressPreset } from '@pdfforge/shared';
+import { formatBytes } from '../lib/format';
+import type { BatchJobItem, CompressPreset } from '@pdfforge/shared';
 import { COMPRESS_PRESETS } from '@pdfforge/shared';
 
 const PRESET_META: Record<CompressPreset, { icon: string }> = {
@@ -17,21 +18,35 @@ const PRESET_META: Record<CompressPreset, { icon: string }> = {
 
 export function CompressPage() {
   const { t } = useI18n();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [preset, setPreset] = useState<CompressPreset>('balanced');
-  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobs, setJobs] = useState<BatchJobItem[] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const addFiles = (incoming: File[]) => {
+    setFiles((prev) => {
+      const names = new Set(prev.map((f) => f.name));
+      return [...prev, ...incoming.filter((f) => !names.has(f.name))];
+    });
+    setJobs(null);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+    setJobs(null);
+  };
+
   const submit = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     setBusy(true);
     setError(null);
     try {
-      const res = await createJob('compress', file, { preset });
-      setJobId(res.job_id);
-    } catch {
-      setError(t.errors.generic);
+      const res = await createCompressBatch(files, preset);
+      setJobs(res.jobs);
+      setFiles([]);
+    } catch (e) {
+      setError(apiErrorMessage(e, t.errors.generic));
     } finally {
       setBusy(false);
     }
@@ -42,16 +57,46 @@ export function CompressPage() {
       <h1 className="text-3xl font-bold text-white">{t.compress.title}</h1>
       <p className="mt-2 text-slate-400">{t.compress.subtitle}</p>
 
-      {!jobId && (
+      {!jobs && (
         <>
           <div className="mt-8">
-            <Dropzone onFiles={(files) => setFile(files[0] ?? null)} />
+            <Dropzone multiple onFiles={addFiles} />
           </div>
 
-          {file && (
-            <div className="mt-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-300">
-              📄 {file.name} · {(file.size / 1024 / 1024).toFixed(2)} MB
-            </div>
+          {files.length > 0 && (
+            <>
+              <div className="mt-4 flex items-center justify-between text-sm text-slate-400">
+                <span>
+                  {files.length} {t.compress.files}
+                </span>
+              </div>
+              <ul className="mt-2 space-y-2">
+                {files.map((file, index) => (
+                  <li
+                    key={file.name}
+                    className="flex items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3"
+                  >
+                    <span className="flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-indigo-500/10 text-xs font-bold text-indigo-400">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-sm text-slate-200">
+                      {file.name}
+                    </span>
+                    <span className="flex-none text-xs text-slate-500">
+                      {formatBytes(file.size)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(index)}
+                      className="flex-none rounded-lg p-1.5 text-slate-500 transition hover:bg-red-500/10 hover:text-red-400"
+                      title={t.merge.remove}
+                    >
+                      <TrashIcon size={16} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
 
           <div className="mt-8">
@@ -83,28 +128,52 @@ export function CompressPage() {
           </div>
 
           {error && (
-            <p className="mt-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</p>
+            <p className="mt-4 rounded-lg bg-red-500/10 px-4 py-3 text-sm text-red-300">
+              {error}
+            </p>
           )}
 
           <button
             type="button"
-            disabled={!file || busy}
+            disabled={files.length === 0 || busy}
             onClick={submit}
             className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 px-6 py-3.5 font-semibold text-white shadow-lg shadow-indigo-500/25 transition enabled:hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy && <SpinnerIcon size={18} />}
-            {t.hero.cta}
+            {files.length > 0
+              ? `${t.hero.cta} (${files.length} ${t.compress.files})`
+              : t.hero.cta}
           </button>
 
           <p className="mt-4 text-center text-xs text-slate-500">{t.compress.note}</p>
         </>
       )}
 
-      {jobId && (
+      {jobs && (
         <div className="mt-8">
-          <JobResultCard jobId={jobId} />
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-white">{t.compress.batchResults}</h2>
+            <button
+              type="button"
+              onClick={() => setJobs(null)}
+              className="text-sm text-slate-500 transition hover:text-white"
+            >
+              ← {t.common.back}
+            </button>
+          </div>
+          <div className="space-y-4">
+            {jobs.map((job) => (
+              <div key={job.job_id}>
+                <p className="mb-1.5 truncate text-sm font-medium text-slate-300">
+                  📄 {job.filename ?? job.job_id}
+                </p>
+                <JobResultCard jobId={job.job_id} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </ToolShell>
   );
 }
+

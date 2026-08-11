@@ -25,7 +25,8 @@
 - [ ] Remove password (with valid password)
 - [ ] Extract embedded images
 - [ ] PDF repair
-- [ ] Batch compression / batch conversion
+- [x] Batch compression (multi-file, queued one-by-one)
+- [ ] Batch conversion
 - [ ] Better preview UI (PDF.js)
 - [ ] Drag-and-drop multi-file workspace
 

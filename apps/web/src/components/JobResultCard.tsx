@@ -28,6 +28,8 @@ export function JobResultCard({ jobId }: { jobId: string }) {
       query.state.data?.status === 'completed' || query.state.data?.status === 'failed'
         ? false
         : 1500,
+    // Keep polling even when the tab is in the background (batch jobs take a while).
+    refetchIntervalInBackground: true,
   });
 
   if (isLoading) {
@@ -82,18 +84,24 @@ export function JobResultCard({ jobId }: { jobId: string }) {
           <div className="grid grid-cols-3 gap-3 text-center">
             <Stat label={t.job.original} value={formatBytes(data.original_size)} />
             <Stat label={t.job.result} value={formatBytes(data.output_size)} />
-            <Stat
-              label={t.job.reduction}
-              value={formatPercent(data.reduction_percent)}
-              highlight={data.reduction_percent != null && data.reduction_percent > 0}
-            />
+            {data.tool === 'compress' ? (
+              <Stat
+                label={t.job.reduction}
+                value={formatPercent(data.reduction_percent)}
+                highlight={data.reduction_percent != null && data.reduction_percent > 0}
+              />
+            ) : (
+              <Stat label={t.job.result} value={data.output_size != null ? '✓' : '—'} />
+            )}
           </div>
 
-          {data.reduction_percent != null && data.reduction_percent <= 0 && (
-            <p className="rounded-lg bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
-              {t.compress.noGain}
-            </p>
-          )}
+          {data.tool === 'compress' &&
+            data.reduction_percent != null &&
+            data.reduction_percent <= 0 && (
+              <p className="rounded-lg bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+                {t.compress.noGain}
+              </p>
+            )}
 
           <div className="flex flex-wrap gap-3">
             <a

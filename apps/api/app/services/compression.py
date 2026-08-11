@@ -36,6 +36,8 @@ def _gs_binary() -> str:
 
 def compress_lossless(input_path: Path, output_path: Path) -> int:
     """Optimize the PDF object structure without visual changes."""
+    input_path = Path(input_path)
+    output_path = Path(output_path)
     with pikepdf.open(input_path) as pdf:
         pdf.remove_unreferenced_resources()
         pdf.save(

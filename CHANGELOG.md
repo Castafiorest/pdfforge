@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Backend job lifecycle (queued → processing → completed/failed → expired/deleted).
 - Auto-cleanup of temporary files (default TTL 30 min).
 - Compression presets: lossless, balanced, maximum.
+- Batch compression (multiple files, one job each, processed in queue order).
 - Client-side tools: merge, split, organize, image-to-PDF.
 - Server-side tools: PDF-to-image, remove metadata.
 - Bilingual UI (English + Indonesian).

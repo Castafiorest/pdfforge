@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { renderPageThumb } from '../lib/preview';
+import { renderPageThumbRobust } from '../lib/preview';
 import type { Rotation } from '../lib/pdf';
 
 type PageThumbProps = {
@@ -12,15 +12,18 @@ type PageThumbProps = {
 
 export function PageThumb({ file, pageNumber, rotation = 0, className }: PageThumbProps) {
   const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    renderPageThumb(file, pageNumber)
+    setSrc(null);
+    setFailed(false);
+    renderPageThumbRobust(file, pageNumber)
       .then((url) => {
         if (!cancelled) setSrc(url);
       })
       .catch(() => {
-        if (!cancelled) setSrc(null);
+        if (!cancelled) setFailed(true);
       });
     return () => {
       cancelled = true;
@@ -38,6 +41,10 @@ export function PageThumb({ file, pageNumber, rotation = 0, className }: PageThu
           className="h-full w-full object-contain"
           style={{ transform: `rotate(${rotation}deg)` }}
         />
+      ) : failed ? (
+        <div className="flex h-full w-full items-center justify-center bg-slate-800 text-sm font-semibold text-slate-500">
+          {pageNumber}
+        </div>
       ) : (
         <div className="flex h-full w-full animate-pulse items-center justify-center bg-slate-800" />
       )}
