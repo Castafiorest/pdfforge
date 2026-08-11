@@ -134,7 +134,7 @@ TTL = 30 minutes
               <span className="h-3 w-3 rounded-full bg-emerald-500/70" />
             </div>
             <pre className="text-slate-300">
-{`$ git clone https://github.com/USERNAME/pdfforge
+{`$ git clone https://github.com/Castafiorest/pdfforge
 $ cd pdfforge
 $ cp .env.example .env
 $ docker compose up -d
