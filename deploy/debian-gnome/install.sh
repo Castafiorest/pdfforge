@@ -14,14 +14,16 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO="$(cd "$SCRIPT_DIR/../.." && pwd)"
 USER_NAME="${SUDO_USER:-$(id -un)}"
 GROUP_NAME="$(id -gn "$USER_NAME" 2>/dev/null || echo "$USER_NAME")"
 API_DIR="$REPO/apps/api"
 VENV="$API_DIR/.venv"
 DATA_DIR="$REPO/data"
 TMP_DIR="$DATA_DIR/tmp"
-ENV_FILE="$SCRIPT_DIR/pdfforge.env"
+# Render the env to a system path (NOT inside the repo) so the git-tracked
+# template in deploy/debian-gnome/pdfforge.env keeps its @REPO@ placeholders.
+ENV_FILE="/etc/pdfforge.env"
 SERVICE_DIR="/etc/systemd/system"
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -39,7 +41,7 @@ echo "→ Installing system packages (ghostscript, nginx, nodejs, python3-venv�
 apt-get update -qq
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
   ghostscript \
-  libgl1 libglib2.0-0 \
+  libgl1 libglib2.0-0t64 \
   fonts-dejavu-core \
   python3 python3-venv python3-pip \
   nodejs npm \
@@ -82,7 +84,9 @@ for unit in pdfforge-api pdfforge-worker; do
       -e "s|@ENV_FILE@|$ENV_FILE|g" \
       "$SCRIPT_DIR/$unit.service" > "$SERVICE_DIR/$unit.service"
 done
+# Render the env template (@REPO@ placeholders) into the system env file.
 sed -e "s|@REPO@|$REPO|g" "$SCRIPT_DIR/pdfforge.env" > "$ENV_FILE"
+chown "$USER_NAME:$GROUP_NAME" "$ENV_FILE"
 chmod 600 "$ENV_FILE"
 
 systemctl daemon-reload
@@ -90,6 +94,10 @@ systemctl enable pdfforge-api.service pdfforge-worker.service
 systemctl restart pdfforge-api.service pdfforge-worker.service
 
 # 6) Nginx ───────────────────────────────────────────────────────────────
+# nginx runs as www-data; allow it to traverse the user's home directory
+# so it can serve the built frontend (chmod o+x = traverse, no listing).
+USER_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+[ -n "$USER_HOME" ] && chmod o+x "$USER_HOME"
 echo "→ Configuring nginx"
 sed -e "s|@REPO@|$REPO|g" "$SCRIPT_DIR/pdfforge-nginx.conf" \
   > /etc/nginx/sites-available/pdfforge

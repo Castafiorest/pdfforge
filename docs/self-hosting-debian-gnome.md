@@ -27,7 +27,7 @@ Then just open **http://localhost**.
 
 ```bash
 sudo apt update
-sudo apt install -y ghostscript libgl1 libglib2.0-0 fonts-dejavu-core \
+sudo apt install -y ghostscript libgl1 libglib2.0-0t64 fonts-dejavu-core \
   python3 python3-venv python3-pip nodejs npm nginx zram-tools
 ```
 
