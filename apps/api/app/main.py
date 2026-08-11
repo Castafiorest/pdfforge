@@ -25,7 +25,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(
     title="PDFForge API",
-    version="0.1.0",
+    version="1.1.0",
     description="Privacy-first PDF toolkit API.",
     lifespan=lifespan,
 )

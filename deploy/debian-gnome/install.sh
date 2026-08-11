@@ -65,10 +65,10 @@ fi
 "$VENV/bin/pip" install -r "$API_DIR/requirements.txt" -q
 
 # 3) Frontend build ──────────────────────────────────────────────────────
-echo "→ Building frontend (first npm install may take a while)"
-if [ ! -d "$REPO/node_modules" ]; then
-  (cd "$REPO" && npm install --no-audit --no-fund)
-fi
+# Always npm install: package.json may gain new deps (e.g. fflate) on
+# updates, and node_modules already existing doesn't mean deps are current.
+echo "→ Installing JS dependencies + building frontend"
+(cd "$REPO" && npm install --no-audit --no-fund)
 (cd "$REPO" && npm run build)
 
 # 4) Data directories ────────────────────────────────────────────────────
