@@ -112,6 +112,8 @@ export const en = {
     result: 'Compressed PDF',
     noGain: 'Compression did not reduce this document. The original file is already highly optimized.',
     note: 'Heavy compression runs on our servers and is deleted automatically.',
+    files: 'files',
+    batchResults: 'Compression results',
   },
   merge: {
     title: 'Merge PDF',

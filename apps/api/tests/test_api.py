@@ -14,7 +14,10 @@ def _submit_and_process(client, tool, file_bytes, filename="doc.pdf", data=None)
     assert response.status_code == 200, response.text
     job_id = response.json()["job_id"]
     _process_job_id(job_id)
-    return client.get(f"/api/v1/jobs/{job_id}").json()
+    status = client.get(f"/api/v1/jobs/{job_id}").json()
+    if status["status"] == "failed":
+        print(f"\n[DEBUG] {tool} job {job_id} failed: {status.get('error')!r}")
+    return status
 
 
 def test_health():
@@ -50,6 +53,41 @@ def test_compress_lifecycle(image_pdf):
         # Delete works.
         deleted = client.delete(f"/api/v1/jobs/{status['id']}")
         assert deleted.status_code == 204
+
+
+def test_compress_batch(sample_pdf):
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/compress-batch",
+            files=[
+                ("files", ("a.pdf", sample_pdf, "application/pdf")),
+                ("files", ("b.pdf", sample_pdf, "application/pdf")),
+            ],
+            data={"preset": "lossless"},
+        )
+        assert response.status_code == 200
+        jobs = response.json()["jobs"]
+        assert len(jobs) == 2
+        assert jobs[0]["filename"] == "a.pdf"
+        assert jobs[0]["original_size"] == len(sample_pdf)
+
+        for job in jobs:
+            _process_job_id(job["job_id"])
+            status = client.get(f"/api/v1/jobs/{job['job_id']}").json()
+            assert status["status"] == "completed", status
+
+
+def test_compress_batch_rejects_invalid():
+    with TestClient(app) as client:
+        response = client.post(
+            "/api/v1/compress-batch",
+            files=[
+                ("files", ("a.pdf", b"%PDF-1.4 fake", "application/pdf")),
+                ("files", ("b.txt", b"not a pdf", "text/plain")),
+            ],
+        )
+        # Validation happens for all files up-front: nothing is created.
+        assert response.status_code == 400
 
 
 def test_split_lifecycle(multi_page_pdf):
@@ -93,6 +131,9 @@ def test_pdf_to_image_lifecycle(sample_pdf):
         download = client.get(f"/api/v1/jobs/{status['id']}/download")
         assert download.status_code == 200
         assert download.headers["content-type"] == "application/zip"
+        # Regression: the downloaded file must be named .zip, not .pdf.
+        assert "filename=" in download.headers["content-disposition"]
+        assert download.headers["content-disposition"].endswith(".zip\"")
 
 
 def test_remove_metadata_lifecycle(sample_pdf):

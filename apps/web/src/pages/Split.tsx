@@ -6,7 +6,9 @@ import { ClientResultPanel } from '../components/ClientResultPanel';
 import { SpinnerIcon } from '../components/icons';
 import { ToolShell } from '../components/Layout';
 import { useI18n } from '../i18n';
+import { triggerDownload } from '../lib/format';
 import { splitPdf, type SplitMode } from '../lib/pdf';
+import { createZip } from '../lib/zip';
 
 export function SplitPage() {
   const { t } = useI18n();
@@ -51,11 +53,8 @@ export function SplitPage() {
     }
   };
 
-  const allBytes = results
-    ? new Blob(
-        results.map((r) => r.bytes.slice().buffer as ArrayBuffer),
-        { type: 'application/pdf' },
-      )
+  const zipBytes = results
+    ? createZip(results.map((r) => ({ name: r.name, data: r.bytes })))
     : null;
 
   return (
@@ -151,14 +150,16 @@ export function SplitPage() {
           {results.map((r) => (
             <ClientResultPanel key={r.name} bytes={r.bytes} filename={r.name} />
           ))}
-          {allBytes && (
+          {zipBytes && (
             <button
               type="button"
               onClick={() => {
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(allBytes);
-                a.download = `${file?.name.replace(/\.pdf$/i, '')}-parts.zip`;
-                a.click();
+                triggerDownload(
+                  new Blob([zipBytes.slice().buffer as ArrayBuffer], {
+                    type: 'application/zip',
+                  }),
+                  `${file?.name.replace(/\.pdf$/i, '')}-parts.zip`,
+                );
               }}
               className="mt-2 w-full rounded-xl border border-slate-700 py-3 text-sm font-medium text-slate-200 transition hover:border-slate-500"
             >

@@ -17,6 +17,19 @@ settings = get_settings()
 
 _semaphore = threading.BoundedSemaphore(max(1, settings.max_concurrent_jobs))
 
+def _retry(fn, attempts: int = 4, base_delay: float = 0.05):
+    """Retry a callable against transient OS/DB locks (e.g. Windows Defender,
+    SQLite busy). Raises the last error when all attempts are exhausted."""
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return fn()
+        except Exception as exc:
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(base_delay * (attempt + 1))
+    assert last is not None
+    raise last
 
 # ── Tool handlers ───────────────────────────────────────────────────────
 def _handle_compress(job_id: str, params: dict) -> dict:
@@ -84,9 +97,12 @@ def _validate_output_pdf(path) -> None:
     """Compression safety: never return a file that can't be opened."""
     import pikepdf
 
-    with pikepdf.open(path) as pdf:
-        if len(pdf.pages) == 0:
-            raise RuntimeError("Processing produced a PDF with no pages.")
+    def _open_check() -> None:
+        with pikepdf.open(path) as pdf:
+            if len(pdf.pages) == 0:
+                raise RuntimeError("Processing produced a PDF with no pages.")
+
+    _retry(_open_check)
 
 
 # ── Queue claim & dispatch ──────────────────────────────────────────────
@@ -149,7 +165,9 @@ def _process_job(job_id: str) -> None:
     with SessionLocal() as db:
         job = db.get(Job, job_id)
         if job:
-            job_service.mark_completed(db, job, result.get("output_size"))
+            # Retry: transient SQLite "database is locked" must not flip a
+            # successful job to failed.
+            _retry(lambda: job_service.mark_completed(db, job, result.get("output_size")))
 
 
 def _tool_for(job_id: str) -> str:

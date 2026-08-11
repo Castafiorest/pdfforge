@@ -13,6 +13,16 @@ class JobCreateResponse(BaseModel):
     status: str = "queued"
 
 
+class BatchJobItem(BaseModel):
+    job_id: str
+    filename: str | None = None
+    original_size: int | None = None
+
+
+class BatchCompressResponse(BaseModel):
+    jobs: list[BatchJobItem]
+
+
 class JobStatusResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

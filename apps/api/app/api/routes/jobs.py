@@ -54,4 +54,7 @@ def _download_name(job: Job) -> str:
         "pdf-to-image": "-images",
         "remove-metadata": "-clean",
     }.get(job.tool, "")
-    return f"{base}{suffix}.pdf"
+    # The real artifact decides the extension: ZIP for image batches / multi-part splits.
+    out = storage.output_file(job.id)
+    ext = out.suffix if out.suffix in {".zip", ".pdf"} else ".pdf"
+    return f"{base}{suffix}{ext}"

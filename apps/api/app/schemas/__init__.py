@@ -1,4 +1,6 @@
 from app.schemas.job import (
+    BatchCompressResponse,
+    BatchJobItem,
     HealthResponse,
     JobCreateResponse,
     JobStatusLiteral,
@@ -6,6 +8,8 @@ from app.schemas.job import (
 )
 
 __all__ = [
+    "BatchCompressResponse",
+    "BatchJobItem",
     "HealthResponse",
     "JobCreateResponse",
     "JobStatusLiteral",

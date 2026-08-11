@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { createJob } from '../api/client';
+import { apiErrorMessage, createJob } from '../api/client';
 import { Dropzone } from '../components/Dropzone';
 import { JobResultCard } from '../components/JobResultCard';
 import { SpinnerIcon } from '../components/icons';
@@ -21,8 +21,8 @@ export function RemoveMetadataPage() {
     try {
       const res = await createJob('remove-metadata', file);
       setJobId(res.job_id);
-    } catch {
-      setError(t.errors.generic);
+    } catch (e) {
+      setError(apiErrorMessage(e, t.errors.generic));
     } finally {
       setBusy(false);
     }

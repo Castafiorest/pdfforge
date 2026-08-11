@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.ratelimit import check_rate_limit
 from app.db import get_db
-from app.schemas.job import JobCreateResponse
+from app.schemas.job import BatchCompressResponse, BatchJobItem, JobCreateResponse
 from app.services import job_service, storage
 from app.services.file_validation import validate_pdf
 
@@ -50,6 +50,54 @@ def compress_pdf(
     storage.save_upload(job.id, data)
     storage.save_params(job.id, {"tool": "compress", "preset": preset})
     return JobCreateResponse(job_id=job.id)
+
+
+@router.post(
+    "/compress-batch",
+    response_model=BatchCompressResponse,
+    dependencies=[Depends(check_rate_limit)],
+)
+def compress_pdf_batch(
+    files: list[UploadFile] = File(...),
+    preset: str = Form("balanced"),
+    db: Session = Depends(get_db),
+) -> BatchCompressResponse:
+    """Compress many PDFs at once — one job per file, processed in queue order."""
+    if not files:
+        raise HTTPException(status_code=400, detail="No files uploaded.")
+    if len(files) > MAX_UPLOAD_FILES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Too many files (max {MAX_UPLOAD_FILES}).",
+        )
+    if preset not in {"lossless", "balanced", "maximum"}:
+        raise HTTPException(status_code=400, detail="Unknown preset.")
+
+    # Validate every file first so a bad file doesn't create partial jobs.
+    uploads: list[tuple[str | None, str | None, bytes]] = []
+    for file in files:
+        data = _read_upload(file)
+        _require_pdf(data, file.filename)
+        uploads.append((file.filename, file.content_type, data))
+
+    jobs: list[BatchJobItem] = []
+    for filename, content_type, data in uploads:
+        job = job_service.create_job(
+            db,
+            tool="compress",
+            original_filename=filename,
+            original_size=len(data),
+            mime_type=content_type,
+            preset=preset,
+        )
+        storage.save_upload(job.id, data)
+        storage.save_params(job.id, {"tool": "compress", "preset": preset})
+        jobs.append(
+            BatchJobItem(
+                job_id=job.id, filename=filename, original_size=len(data)
+            )
+        )
+    return BatchCompressResponse(jobs=jobs)
 
 
 @router.post(
