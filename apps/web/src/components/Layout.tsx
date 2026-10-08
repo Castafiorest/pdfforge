@@ -50,7 +50,7 @@ export function Layout() {
               {t.nav.selfHost}
             </NavLink>
             <a
-              href="https://github.com"
+              href="https://github.com/Castafiorest/pdfforge"
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-slate-300 transition hover:text-white"
               target="_blank"
               rel="noreferrer"
