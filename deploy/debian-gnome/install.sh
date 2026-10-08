@@ -70,6 +70,9 @@ fi
 echo "→ Installing JS dependencies + building frontend"
 (cd "$REPO" && npm install --no-audit --no-fund)
 (cd "$REPO" && npm run build)
+# Keep build artifacts owned by the user so they can rebuild without sudo
+# (npm run build as root would otherwise leave root-owned files in dist/).
+chown -R "$USER_NAME:$GROUP_NAME" "$REPO/apps/web/dist"
 
 # 4) Data directories ────────────────────────────────────────────────────
 echo "→ Preparing data directories"
