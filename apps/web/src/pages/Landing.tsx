@@ -134,7 +134,7 @@ TTL = 30 minutes
               <span className="h-3 w-3 rounded-full bg-emerald-500/70" />
             </div>
             <pre className="text-slate-300">
-{`$ git clone https://github.com/Castafiorest/pdfforge
+{`$ git clone https://github.com/Castafiorest/pdfforge.git
 $ cd pdfforge
 $ cp .env.example .env
 $ docker compose up -d
@@ -164,7 +164,7 @@ $ docker compose up -d
           <h2 className="text-3xl font-bold text-white md:text-4xl">{t.sections.github}</h2>
           <p className="mx-auto mt-3 max-w-xl text-slate-400">{t.sections.githubSub}</p>
           <a
-            href="https://github.com"
+            href="https://github.com/Castafiorest/pdfforge"
             target="_blank"
             rel="noreferrer"
             className="mt-8 inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 font-semibold text-slate-900 transition hover:bg-slate-200"
