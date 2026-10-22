@@ -35,7 +35,7 @@ export function App() {
   return (
     <I18nProvider>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BrowserRouter>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route element={<Layout />}>
