@@ -101,4 +101,4 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md). Report security issues via [`SECURITY.
 
 ## 📄 License
 
-[AGPL-3.0](LICENSE) — open source, forever. If you run a modified version as a service, you must share your changes.
+[AGPL-3.0](LICENSE) — open source, forever. If you run a modified version as a service, you must share your changes..
