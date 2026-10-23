@@ -17,3 +17,5 @@ body {
 ::selection {
   @apply bg-indigo-500/40 text-white;
 }
+
+/* auto-deploy test */
