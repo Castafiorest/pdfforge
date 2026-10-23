@@ -1,6 +1,6 @@
 # PDFForge auto-deploy — systemd unit (template). @REPO@ is replaced by install.sh.
 [Unit]
-Description=PDFForge auto-deploy (pull production, rebuild, restart)
+Description=PDFForge auto-deploy (pull master, rebuild, restart)
 Wants=network-online.target
 After=network-online.target
 

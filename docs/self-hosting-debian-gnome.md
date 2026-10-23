@@ -23,13 +23,19 @@ Then just open **http://localhost**.
 
 ## Auto-deploy (after the first install)
 
-Once CI is green on `main`, the `Promote` workflow fast-forwards the
-`production` branch. The server checks that branch every 5 minutes
+`master` is the production branch: code reaches it only through a reviewed pull
+request whose CI run is green. The server checks `origin/master` every 5 minutes
 (`pdfforge-deploy.timer`), pulls it, rebuilds only what changed, and restarts the
 API/worker when the backend changed.
 
-So: `git push` from any machine → the server is serving the new version within
-~5 minutes, without touching it.
+```
+main ──push──► PR main → master (CI must pass) ──merge──► server updates ≤5 min
+```
+
+So releasing only needs a merge on GitHub — no shell session on the server.
+
+Enforce the gate in **Settings → Branches → Add branch ruleset** for `master`:
+require a pull request and the `CI` status check before merging.
 
 ```bash
 systemctl list-timers pdfforge-deploy.timer          # next scheduled check

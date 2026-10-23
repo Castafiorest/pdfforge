@@ -20,9 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Docker Compose deployment with Caddy reverse proxy.
 - `.gitattributes` enforcing LF line endings, so Windows checkouts cannot commit
   CRLF into shell scripts.
-- Auto-deploy: `Promote` workflow fast-forwards `production` after a green CI
-  run, and `pdfforge-deploy.timer` pulls that branch on the server, rebuilds
-  only what changed, and restarts the API/worker.
+- Auto-deploy: `pdfforge-deploy.timer` pulls `master` (the production branch,
+  updated through reviewed PRs) on the server, rebuilds only what changed, and
+  restarts the API/worker.
 
 ### Changed
 

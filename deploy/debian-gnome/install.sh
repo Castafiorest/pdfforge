@@ -124,7 +124,7 @@ for unit in pdfforge-api pdfforge-worker; do
       -e "s|@ENV_FILE@|$ENV_FILE|g" \
       "$SCRIPT_DIR/$unit.service" > "$SERVICE_DIR/$unit.service"
 done
-# Auto-deploy: pull the promoted `production` branch, rebuild, restart.
+# Auto-deploy: pull the production branch (`master`), rebuild, restart.
 sed -e "s|@REPO@|$REPO|g" \
   "$SCRIPT_DIR/pdfforge-deploy.service" > "$SERVICE_DIR/pdfforge-deploy.service"
 sed -e "s|@INTERVAL@|${DEPLOY_INTERVAL:-5min}|g" \
@@ -168,7 +168,7 @@ echo "API   : http://localhost/api/v1/health"
 echo ""
 echo "Status: systemctl status pdfforge-api pdfforge-worker nginx"
 echo "Logs  : journalctl -u pdfforge-api -f"
-echo "Deploy: systemctl list-timers pdfforge-deploy.timer (pulls origin/production)"
+echo "Deploy: systemctl list-timers pdfforge-deploy.timer (pulls origin/master)"
 echo ""
 echo "Tip (low-spec): switch GNOME to console-only on boot to free ~1 GB RAM:"
 echo "    sudo systemctl set-default multi-user.target"

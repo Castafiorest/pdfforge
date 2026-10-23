@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# PDFForge auto-deploy — runs on the server, pulls the promoted `production`
-# branch, rebuilds only what changed, and restarts the services.
+# PDFForge auto-deploy — runs on the server, pulls the `master` branch (the
+# production branch, updated only through reviewed PRs), rebuilds only what
+# changed, and restarts the services.
 #
 # The server is a deploy target: local modifications in the worktree are
 # overwritten. Run it as root (the systemd unit does) or via sudo.
@@ -8,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$SCRIPT_DIR/.." && pwd)"
-BRANCH="${DEPLOY_BRANCH:-production}"
+BRANCH="${DEPLOY_BRANCH:-master}"
 VENV="$REPO/apps/api/.venv"
 
 cd "$REPO"
@@ -27,7 +28,7 @@ say() { echo "[deploy] $*"; }
 as_owner git fetch --prune --quiet origin
 
 if ! as_owner git rev-parse --verify --quiet "origin/$BRANCH" >/dev/null; then
-  say "origin/$BRANCH does not exist yet (CI has not promoted a green main commit). Skipping."
+  say "origin/$BRANCH does not exist yet. Skipping."
   exit 0
 fi
 

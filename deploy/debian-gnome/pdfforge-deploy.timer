@@ -1,6 +1,6 @@
 # PDFForge auto-deploy timer (template). @INTERVAL@ is replaced by install.sh.
 [Unit]
-Description=Check origin/production for new deploys (@INTERVAL@)
+Description=Check origin/master for new deploys (@INTERVAL@)
 
 [Timer]
 OnBootSec=2min
