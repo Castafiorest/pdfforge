@@ -27,12 +27,15 @@ Then just open **http://localhost**.
 
 ```bash
 sudo apt update
-sudo apt install -y ghostscript libgl1 libglib2.0-0t64 fonts-dejavu-core \
+# Debian 13+ / Ubuntu 24.04+ ship libglib2.0-0t64; on Debian 12 use libglib2.0-0.
+GLIB_PKG=libglib2.0-0t64
+sudo apt install -y ghostscript libgl1 "$GLIB_PKG" fonts-dejavu-core \
   python3 python3-venv python3-pip nodejs npm nginx zram-tools
 ```
 
-> Node must be ≥ 18 for Vite. If `node -v` is older, install Node 20:
-> `curl -fsSL https://deb.nodesource.com/setup_20.x | sudo bash && sudo apt install -y nodejs`
+> Vite 7 requires **Node `^20.19.0` or `>=22.12.0`** — a plain `node >= 20` is not
+> enough (Node 20.0–20.18 fails). If `node -v` is older, install Node 22 LTS:
+> `curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash && sudo apt install -y nodejs`
 
 ### 2. Backend (venv)
 
@@ -46,9 +49,13 @@ python3 -m venv .venv
 
 ```bash
 cd <repo root>
-npm install
+npm ci
 npm run build
 ```
+
+> Use `npm ci`, not `npm install`: it installs exactly what `package-lock.json`
+> specifies and never rewrites the lockfile, so a Linux server does not produce
+> lockfile churn when the lockfile was generated on another OS.
 
 ### 4. Environment (low-spec tuned)
 

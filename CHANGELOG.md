@@ -18,3 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Server-side tools: PDF-to-image, remove metadata.
 - Bilingual UI (English + Indonesian).
 - Docker Compose deployment with Caddy reverse proxy.
+- `.gitattributes` enforcing LF line endings, so Windows checkouts cannot commit
+  CRLF into shell scripts.
+
+### Changed
+
+- Node requirement is now `^20.19.0 || >=22.12.0` (Vite 7 minimum) in `engines`,
+  CI, and the Debian installer, which previously accepted Node 18.
+- The Debian installer uses `npm ci` instead of `npm install` for reproducible
+  frontend builds that never rewrite the committed lockfile.
+- The Debian installer detects `libglib2.0-0t64` vs `libglib2.0-0` and refuses
+  unsupported operating systems or Debian < 12 with a clear message.
