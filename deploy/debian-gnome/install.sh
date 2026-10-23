@@ -124,6 +124,11 @@ for unit in pdfforge-api pdfforge-worker; do
       -e "s|@ENV_FILE@|$ENV_FILE|g" \
       "$SCRIPT_DIR/$unit.service" > "$SERVICE_DIR/$unit.service"
 done
+# Auto-deploy: pull the promoted `production` branch, rebuild, restart.
+sed -e "s|@REPO@|$REPO|g" \
+  "$SCRIPT_DIR/pdfforge-deploy.service" > "$SERVICE_DIR/pdfforge-deploy.service"
+sed -e "s|@INTERVAL@|${DEPLOY_INTERVAL:-5min}|g" \
+  "$SCRIPT_DIR/pdfforge-deploy.timer" > "$SERVICE_DIR/pdfforge-deploy.timer"
 # Render the env template (@REPO@ placeholders) into the system env file.
 sed -e "s|@REPO@|$REPO|g" "$SCRIPT_DIR/pdfforge.env" > "$ENV_FILE"
 chown "$USER_NAME:$GROUP_NAME" "$ENV_FILE"
@@ -132,6 +137,7 @@ chmod 600 "$ENV_FILE"
 systemctl daemon-reload
 systemctl enable pdfforge-api.service pdfforge-worker.service
 systemctl restart pdfforge-api.service pdfforge-worker.service
+systemctl enable --now pdfforge-deploy.timer
 
 # 6) Nginx ───────────────────────────────────────────────────────────────
 # nginx runs as www-data; allow it to traverse the user's home directory
@@ -162,6 +168,7 @@ echo "API   : http://localhost/api/v1/health"
 echo ""
 echo "Status: systemctl status pdfforge-api pdfforge-worker nginx"
 echo "Logs  : journalctl -u pdfforge-api -f"
+echo "Deploy: systemctl list-timers pdfforge-deploy.timer (pulls origin/production)"
 echo ""
 echo "Tip (low-spec): switch GNOME to console-only on boot to free ~1 GB RAM:"
 echo "    sudo systemctl set-default multi-user.target"

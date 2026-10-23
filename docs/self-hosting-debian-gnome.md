@@ -21,6 +21,29 @@ Then just open **http://localhost**.
 
 ---
 
+## Auto-deploy (after the first install)
+
+Once CI is green on `main`, the `Promote` workflow fast-forwards the
+`production` branch. The server checks that branch every 5 minutes
+(`pdfforge-deploy.timer`), pulls it, rebuilds only what changed, and restarts the
+API/worker when the backend changed.
+
+So: `git push` from any machine → the server is serving the new version within
+~5 minutes, without touching it.
+
+```bash
+systemctl list-timers pdfforge-deploy.timer          # next scheduled check
+journalctl -u pdfforge-deploy -f                     # deploy log
+sudo systemctl start pdfforge-deploy.service         # deploy now, don't wait
+sudo systemctl disable --now pdfforge-deploy.timer   # turn auto-deploy off
+```
+
+> The server is a **deploy target**: anything edited there is overwritten on the
+> next deploy. Change the interval at install time with
+> `sudo DEPLOY_INTERVAL=15min bash deploy/debian-gnome/install.sh`.
+
+---
+
 ## Option B — Manual setup
 
 ### 1. Install system packages

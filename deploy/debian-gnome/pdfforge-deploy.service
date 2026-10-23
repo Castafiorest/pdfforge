@@ -1,0 +1,16 @@
+# PDFForge auto-deploy — systemd unit (template). @REPO@ is replaced by install.sh.
+[Unit]
+Description=PDFForge auto-deploy (pull production, rebuild, restart)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# Runs as root so it can restart the API/worker; the script itself drops to the
+# repo owner for git/npm so artifacts stay user-owned.
+ExecStart=/usr/bin/env bash @REPO@/scripts/deploy.sh
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# A cold build on a 2-core machine takes a while.
+TimeoutStartSec=15min
+Nice=10
+IOSchedulingClass=idle

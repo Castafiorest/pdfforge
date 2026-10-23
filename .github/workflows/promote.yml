@@ -1,0 +1,38 @@
+name: Promote
+
+# Fast-forward `production` only after CI succeeds on `main`. The server's
+# auto-deploy timer watches `production`, so a red CI never reaches the server.
+#
+# Note: GitHub only triggers `workflow_run` for workflows that exist on the
+# repository's default branch — this file must live on `main`.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  # Manual promotion (first bootstrap, or re-promote without a new commit).
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-production
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          fetch-depth: 0
+
+      - name: Fast-forward production
+        # Plain push (no --force): promotion must be a fast-forward, so a
+        # rewritten main can never silently ship to the server.
+        run: git push origin "HEAD:refs/heads/production"
